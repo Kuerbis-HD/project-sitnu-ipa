@@ -23,11 +23,14 @@ jobs:
         run: xcodebuild -scheme "Project SITNU" -target "Project SITNU" -configuration Release clean archive -archivePath "build/sitnu.xcarchive" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO | xcbeautify
       - name: Export ipa
         run: mv build/sitnu.xcarchive/Products/Applications/ build/sitnu.xcarchive/Products/Payload && cd build/sitnu.xcarchive/Products && zip -r sitnu.ipa Payload/
-      - name: Upload ipa
-        uses: actions/upload-artifact@v3
+      - name: Set git short sha output
+        id: short_sha
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          name: unsigned-ipa
-          path: build/sitnu.xcarchive/Products/sitnu.ipa
-            
-            
-            
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "${{ steps.short_sha.outputs.sha_short }}"
+          prerelease: true
+          title: "Development Build (master branch ${{ steps.short_sha.outputs.sha_short }})"
+          files: |
+            build/sitnu.xcarchive/Products/sitnu.ipa
